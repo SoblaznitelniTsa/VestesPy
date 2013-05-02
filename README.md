@@ -74,6 +74,6 @@ Note that `ChunkResponse` will set `Transfer-Encoding: chunked` header and will 
 -
 
 **class vestespy.response.StreamResponse**
-  - **init(self, stream, mime=None, charset=None, length=None)** The `body` should be either `str` or `bytes`.
+  - **init(self, stream, mime=None, charset=None, length=None)** The `stream` should be any iterable. You have to specify `length` (will be passed as a response header).
 
 This is similar to `ChunkResponse` except it requires `length` parameter (which is the length of entire data in `stream`, not number of chunks). It sets `Content-Length: length` header and does the normal streaming.
