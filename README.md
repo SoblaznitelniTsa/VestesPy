@@ -77,3 +77,12 @@ Note that `ChunkResponse` will set `Transfer-Encoding: chunked` header and will 
   - **init(self, stream, mime=None, charset=None, length=None)** The `stream` should be any iterable. You have to specify `length` (will be passed as a response header).
 
 This is similar to `ChunkResponse` except it requires `length` parameter (which is the length of entire data in `stream`, not number of chunks). It sets `Content-Length: length` header and does the normal streaming.
+
+
+-
+
+**LICENSE**
+
+<rafael.szefler@gmail.com> wrote this code. As long as you retain this notice you can do whatever you want with this stuff. If we meet some day, and you think this stuff is worth it, you can buy me a beer in return.
+
+Rafael Szefler
