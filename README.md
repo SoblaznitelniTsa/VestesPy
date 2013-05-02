@@ -7,7 +7,7 @@ Python3 Asynchronous Web Server and a lightweight framework.
 
 **Prerequisites:**
 
-    * Python 3.3
+NO DEPENDENCIES except for Python 3.x (tested with Python3.3).
 
 **Example:**
 
