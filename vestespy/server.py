@@ -16,9 +16,9 @@ class Server:
 		
 		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self._socket.bind(addr)
-		self._socket.settimeout(0)
+		self._socket.setblocking(0)
 		self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self._socket.listen(5)
+		self._socket.listen(50)
 
 		self.method = getattr(selects, select)(self)
 		self.debug = debug
@@ -42,7 +42,6 @@ class Server:
 
 	def _after_request(self, req):
 		req.body = req._buffer
-		req._buffer = b""
 		try:
 			return self.after_request(req)
 		except Exception:
@@ -50,6 +49,9 @@ class Server:
 			error = HTTPError(500, debug=self.debug)
 			error.send(req)
 			raise
+		finally:
+			req._buffer = b""
+			del req.body
 
 	def serve_forever(self):
 		try:

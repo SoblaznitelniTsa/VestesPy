@@ -13,5 +13,5 @@ class MyServer(vestespy.Server):
 		res.headers["Cache-Control"] = "no-cache"
 		return res
 
-server = MyServer(("localhost", 8080), debug=True)
+server = MyServer(("localhost", 8080), debug=True, select="epoll")
 server.serve_forever()
