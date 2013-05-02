@@ -36,8 +36,8 @@ VestesPy is very easy to use. All you need to do is create a subclass of `vesesp
 -
 
 **class vestespy.Server**
-  - **init(self, addr, debug=False, select="select", handler=Request, max_workers=50)** Initializes an instance of the server. The server initializes a thread pool to handle incoming requests (with `max_workers` as number of threads). Currently supported select mechanisms are `select` and `epoll`. `handler` has to be a subclass of `Handler`.
-  - **server_forever(self)** Fires the server.
+  - **init(self, addr, debug=False, select="select", handler=Request, max_workers=50)** Initializes an instance of the server. The server initializes a thread pool to handle incoming requests (with `max_workers` as number of threads). Currently supported select mechanisms are `select` and `epoll`. `handler` has to be a subclass of `Request`.
+  - **serve_forever(self)** Fires the server.
   - **shutdown(self)** Kills the server.
 
 In order to use the server you should implement the following methods (of which only `after_request` is mandatory):
