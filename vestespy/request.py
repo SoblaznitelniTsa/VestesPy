@@ -93,7 +93,8 @@ class Request:
 			try:
 				result = self.server.stream_request(self, chunk)
 			except Exception:
-				traceback.print_exc()
+				if self.server.debug:
+					traceback.print_exc()
 				self.shutdown()
 				return
 
@@ -105,7 +106,8 @@ class Request:
 				try:
 					response = self.server._after_request(self)
 				except Exception:
-					traceback.print_exc()
+					if self.server.debug:
+						traceback.print_exc()
 					self.shutdown()
 					return
 				self._length = 0
@@ -148,13 +150,16 @@ class Request:
 				try:
 					self._parse_headers(headers)
 				except Exception:
+					if self.server.debug:
+						traceback.print_exc()
 					self.shutdown()
 					return
 
 				try:
 					result = self.server.before_request(self)
 				except Exception:
-					traceback.print_exc()
+					if self.server.debug:
+						traceback.print_exc()
 					raise
 
 				if result == False:
@@ -167,7 +172,8 @@ class Request:
 				else:
 					self._handle_buffer(data)
 			except Exception:
-				traceback.print_exc()
+				if self.server.debug:
+					traceback.print_exc()
 				raise
 
 		else:
