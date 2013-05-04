@@ -6,5 +6,6 @@ if sys.version_info[0] < 3:
 from vestespy.server import Server
 from vestespy.request import Request
 from vestespy.response import Response
+from vestespy.errors import HTTPError
 
 __version__ = (0, 1)

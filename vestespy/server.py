@@ -4,7 +4,7 @@ import traceback
 from vestespy import selects
 from concurrent.futures import ThreadPoolExecutor
 from vestespy.request import Request
-from vestespy.tools import EventManager
+from vestespy.tools import EventManager, dummy
 from vestespy.parser import get_request_data
 
 class Server(EventManager):
@@ -23,6 +23,8 @@ class Server(EventManager):
 
 		self.method = getattr(selects, select)(self)
 		self.debug = debug
+		if not self.debug:
+			self.set_exception_handler(dummy)
 		super().__init__()
 
 	def shutdown(self):
@@ -44,6 +46,9 @@ class Server(EventManager):
 
 	def handle_raw(self, conn):
 		req = self.handler_class(conn, self)
+		if not self.debug:
+			req.set_exception_handler(dummy)
+		
 		try:
 			get_request_data(req)
 		except Exception:

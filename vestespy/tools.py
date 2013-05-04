@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+import traceback
 from vestespy import validators
 
 CRLF = b"\r\n"
 HTTP_HEADER_END = b"\r\n\r\n"
 HTTP_HEADER_SEPARATOR = b":"
+
+def dummy(*args, **kwargs):
+	pass
 
 def generate_simple_http(content):
 	if not isinstance(content, bytes):
@@ -76,9 +80,16 @@ class Headers:
 			except Exception:
 				del self._data[key]
 
+def default_exception_handler():
+	traceback.print_exc()
+
 class EventManager:
 	def __init__(self, *args, **kwargs):
 		self._events = {}
+		self.exception_handler = default_exception_handler
+
+	def set_exception_handler(self, handler):
+		self.exception_handler = handler
 
 	def on(self, name, handler):
 		if not callable(handler):
@@ -110,4 +121,4 @@ class EventManager:
 			try:
 				handler(self, *args)
 			except Exception:
-				pass
+				self.exception_handler()

@@ -18,7 +18,7 @@ VestesPy is very easy to use. All you need to do is create an instance of `veses
     def onend(req, res):
       res.send_all("TEST")
 
-    def onrequest(server, req):
+    def onrequest(server, req, res):
       req.on("end", onend)
 
     server = vestespy.Server(("localhost", 8080))
