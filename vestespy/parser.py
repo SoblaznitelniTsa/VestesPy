@@ -59,6 +59,7 @@ def get_request_data(req):
 
 			if sep != HTTP_HEADER_END:
 				# headers are not inside initial data, kill it
+				res.send_error(400)
 				req.shutdown()
 				return
 
@@ -66,6 +67,7 @@ def get_request_data(req):
 				req.headers, req.method, req.url, req.query, req.protocol = parse_headers(head)
 			except Exception:
 				req.server.exception_handler()
+				res.send_error(400)
 				req.shutdown()
 				return
 
