@@ -66,7 +66,7 @@ def get_request_data(req):
 				# TODO: return HTTP error?
 				req.content_length = 0
 
-			req.server.trigger("request", [req])
+			req.server.trigger("request", [req, res])
 
 			res.protocol = req.protocol
 
@@ -78,7 +78,7 @@ def get_request_data(req):
 			data = data[:data_length]
 
 		total += data_length
-		req.trigger("data", [data, res])
+		req.trigger("data", [res, data])
 
 		if total == req.content_length:
 			req.trigger("end", [res])

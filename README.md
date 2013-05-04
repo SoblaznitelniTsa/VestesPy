@@ -36,17 +36,15 @@ VestesPy is very easy to use. All you need to do is create an instance of `veses
   - **shutdown(self)** Kills the server.
 
 The server is also an event emitter. It responds to the following events:
-  - **request** handler is a function of the form **def onrequest(server, req)**. This event fires once the request is accepted and headers are parsed.
+  - **request** handler is a function of the form **def onrequest(server, req, res)**. This event fires once the request is accepted and headers are parsed.
 
 -
 
 **class vestespy.Request**
 Passed to server's `request` handler. It's an object associated to the request. It is an event emitter with the following events:
 
-  - **data** Fires when data arrives;
-  - **end** Fires at the end of the request;
-
-Each of the events can be handled via handler of type **def onevent(req, res)**, where `res` is an instance of `vestespy.Response`.
+  - **data** Fires when data arrives; Note that a developer has to take care of combining/parsing chunked body; At the moment the request has to have `Content-Length` header, otherwise VestesPy will treat it as a request without body; The handler for this event is of type **def ondata(req, res, chunk)**;
+  - **end** Fires at the end of the request; The handler for this event is of type **def onend(req, res)**;
 
 -
 
