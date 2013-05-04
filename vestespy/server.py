@@ -8,18 +8,29 @@ from vestespy.tools import EventManager, dummy
 from vestespy.parser import get_request_data
 
 class Server(EventManager):
-	def __init__(self, addr, handler=Request, select="select", max_workers=50, debug=False):
+	def __init__(self, addr, handler=Request, 
+			select="select", max_workers=50, debug=False,
+			HEADERS_LENGTH=8192, CHUNK_LENGTH=16384):
 		if not issubclass(handler, Request):
 			raise ValueError("Server instance only accepts subclasses of Request as handlers!")
 		self._pool = ThreadPoolExecutor(max_workers=max_workers)
-		self.address = addr
 		self.handler_class = handler
 		
-		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self._socket.bind(addr)
-		self._socket.setblocking(0)
-		self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self._socket.listen(50)
+		if isinstance(addr, tuple):
+			self.address = addr
+			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self._socket.bind(addr)
+			self._socket.setblocking(0)
+			self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			self._socket.listen(50)
+		elif isinstance(addr, socket.socket):
+			self._socket = addr
+			self.address = addr.getsockname()
+		else:
+			raise TypeError("You have to pass either address tuple of instance of socket.socket to Server!")
+
+		self.HEADERS_LENGTH = HEADERS_LENGTH
+		self.CHUNK_LENGTH = CHUNK_LENGTH
 
 		self.method = getattr(selects, select)(self)
 		self.debug = debug

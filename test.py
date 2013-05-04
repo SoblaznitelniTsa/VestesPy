@@ -10,10 +10,11 @@ def onend(req, res):
 	res.send_all("OK")
 
 def onrequest(server, req, res):
+	print(req.headers)
 	req.on("end", onend)
 	req.on("data", ondata)
 
-server = vestespy.Server(("localhost", 8080), debug=True)
+server = vestespy.Server(("localhost", 8000), debug=True)
 server.on("request", onrequest)
 
 server.serve_forever()

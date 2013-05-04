@@ -6,12 +6,6 @@ from vestespy.tools import Headers, CRLF, HTTP_HEADER_END, HTTP_HEADER_SEPARATOR
 from vestespy.response import Response
 from vestespy.errors import HTTPError
 
-# HEADERS_LENGTH = 8192
-# STREAM_LENGTH = 16384
-
-HEADERS_LENGTH = 256
-STREAM_LENGTH = 256
-
 def parse_headers(raw):
 	data = raw.strip().split(CRLF)
 
@@ -47,9 +41,9 @@ def get_request_data(req):
 		res.check_self()
 
 		if hasattr(req, "headers"):
-			recv = STREAM_LENGTH
+			recv = req.server.HEADERS_LENGTH
 		else:
-			recv = HEADERS_LENGTH
+			recv = req.server.CHUNK_LENGTH
 
 		try:
 			data = req.connection.recv(recv)
