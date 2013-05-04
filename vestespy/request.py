@@ -6,7 +6,6 @@ class Request(EventManager):
 
 	def __init__(self, conn, server):
 		self.connection = conn
-		self.connection.setblocking(0)
 		self.server = server
 		super().__init__()
 

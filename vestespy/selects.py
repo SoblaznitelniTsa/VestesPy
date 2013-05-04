@@ -52,6 +52,7 @@ class select:
 				for sock in read:
 					if sock == server._socket:
 						conn, addr = server._socket.accept()
+						conn.setblocking(0)
 						with self._lock:
 							self.connections.append(conn)
 					else:
@@ -86,6 +87,7 @@ class epoll:
 					if fileno == socket.fileno():
 						try:
 							conn, addr = socket.accept()
+							conn.setblocking(0)
 							self.epoll.register(conn.fileno(), S.EPOLLIN | S.EPOLLET)
 							with self._lock:
 								self.connections[conn.fileno()] = conn

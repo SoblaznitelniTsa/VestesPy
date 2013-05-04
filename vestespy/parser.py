@@ -105,6 +105,5 @@ def get_request_data(req):
 
 		if hasattr(req, "headers") and req.headers.get("connection", "") != "keep-alive":
 			req.shutdown()
-			del req
 	finally:
-		del res.request, res.connection, req.server, res
+		del res.request, res.connection, res.server, res
