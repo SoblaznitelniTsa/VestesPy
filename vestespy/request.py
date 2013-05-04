@@ -17,3 +17,5 @@ class Request(EventManager):
 			self.close()
 		except Exception:
 			pass
+		finally:
+			del self.server, self.connection

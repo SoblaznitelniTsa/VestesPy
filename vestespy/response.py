@@ -3,7 +3,8 @@ from vestespy import http_status
 from vestespy.tools import Headers, CRLF
 
 class Response:
-	def __init__(self, conn, server):
+	def __init__(self, conn, server, request=None):
+		self.request = request
 		self.alive = True
 		self.connection = conn
 		self.server = server

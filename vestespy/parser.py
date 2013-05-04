@@ -35,72 +35,76 @@ def finalize(req, res):
 		res.send_error(e.code, e.msg)
 
 def get_request_data(req):
-	res = Response(req.connection, req.server)
+	res = Response(req.connection, req.server, request=req)
 	total = 0
-	while True:
-		res.check_self()
+	try:
+		while True:
+			res.check_self()
 
-		if hasattr(req, "headers"):
-			recv = req.server.HEADERS_LENGTH
-		else:
-			recv = req.server.CHUNK_LENGTH
+			if hasattr(req, "headers"):
+				recv = req.server.HEADERS_LENGTH
+			else:
+				recv = req.server.CHUNK_LENGTH
 
-		try:
-			data = req.connection.recv(recv)
-		except socket.error:
-			break
+			try:
+				data = req.connection.recv(recv)
+			except socket.error:
+				break
 
-		if not data:
-			req.shutdown()
-			return
-
-		if not hasattr(req, "headers"):
-			head, sep, chunk = data.partition(HTTP_HEADER_END)
-
-			if sep != HTTP_HEADER_END:
-				# headers are not inside initial data, kill it
-				res.send_error(400)
+			if not data:
 				req.shutdown()
 				return
 
-			try:
-				req.headers, req.method, req.url, req.query, req.protocol = parse_headers(head)
-			except Exception:
-				req.server.exception_handler()
-				res.send_error(400)
-				req.shutdown()
-				return
+			if not hasattr(req, "headers"):
+				head, sep, chunk = data.partition(HTTP_HEADER_END)
 
-			try:
-				req.content_length = int(req.headers["content-length"])
-			except (KeyError, TypeError, ValueError):
-				req.content_length = 0
+				if sep != HTTP_HEADER_END:
+					# headers are not inside initial data, kill it
+					res.send_error(400)
+					req.shutdown()
+					return
 
+				try:
+					req.headers, req.method, req.url, req.query, req.protocol = parse_headers(head)
+				except Exception:
+					req.server.exception_handler()
+					res.send_error(400)
+					req.shutdown()
+					return
+
+				try:
+					req.content_length = int(req.headers["content-length"])
+				except (KeyError, TypeError, ValueError):
+					req.content_length = 0
+
+				try:
+					req.server.trigger("request", [req, res])
+				except HTTPError as e:
+					res.send_error(e.status, e.msg)
+					break
+
+				res.protocol = req.protocol
+
+				data = chunk
+
+			data_length = len(data)
+			if data_length + total > req.content_length:
+				data_length = req.content_length - total
+				data = data[:data_length]
+
+			total += data_length
 			try:
-				req.server.trigger("request", [req, res])
+				req.trigger("data", [res, data])
 			except HTTPError as e:
 				res.send_error(e.status, e.msg)
 				break
 
-			res.protocol = req.protocol
+			if total == req.content_length:
+				finalize(req, res)
+				break
 
-			data = chunk
-
-		data_length = len(data)
-		if data_length + total > req.content_length:
-			data_length = req.content_length - total
-			data = data[:data_length]
-
-		total += data_length
-		try:
-			req.trigger("data", [res, data])
-		except HTTPError as e:
-			res.send_error(e.status, e.msg)
-			break
-
-		if total == req.content_length:
-			finalize(req, res)
-			break
-
-	if hasattr(req, "headers") and req.headers.get("connection", "") != "keep-alive":
-		req.shutdown()
+		if hasattr(req, "headers") and req.headers.get("connection", "") != "keep-alive":
+			req.shutdown()
+			del req
+	finally:
+		del res.request, res.connection, req.server, res
