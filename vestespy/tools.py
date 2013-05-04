@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from vestespy import validators
 
+CRLF = b"\r\n"
+HTTP_HEADER_END = b"\r\n\r\n"
+HTTP_HEADER_SEPARATOR = b":"
+
 def generate_simple_http(content):
 	if not isinstance(content, bytes):
 		content = bytes(content, "utf-8")
@@ -71,3 +75,39 @@ class Headers:
 				self._data[key] = (value, org[1])
 			except Exception:
 				del self._data[key]
+
+class EventManager:
+	def __init__(self, *args, **kwargs):
+		self._events = {}
+
+	def on(self, name, handler):
+		if not callable(handler):
+			raise TypeError("You have to pass callables to .on method!")
+		if name not in self._events:
+			self._events[name] = []
+		self._events[name].append(handler)
+
+	def off(self, name, handler=None):
+		if name not in self._events:
+			return
+
+		if handler is not None:
+			try:
+				self._events[name].remove(handler)
+			except ValueError:
+				pass
+		else:
+			self._events[name] = None
+
+		if not self._events[name]:
+			del self._events[name]
+
+	def trigger(self, name, args=[]):
+		if name not in self._events:
+			return
+
+		for handler in self._events[name]:
+			try:
+				handler(self, *args)
+			except Exception:
+				pass

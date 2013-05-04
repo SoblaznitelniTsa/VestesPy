@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-from vestespy.server import Server
-from vestespy import request
-from vestespy import response
+import sys
+if sys.version_info[0] < 3:
+	raise Exception("You need Python3+ to use VestesPy.")
 
-__version__ = "0.1"
+from vestespy.server import Server
+from vestespy.request import Request
+from vestespy.response import Response
+
+__version__ = (0, 1)

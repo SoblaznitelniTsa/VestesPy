@@ -11,24 +11,19 @@ NO DEPENDENCIES except for Python 3.x (tested with Python3.3).
 
 **Example:**
 
-VestesPy is very easy to use. All you need to do is create a subclass of `vesespy.Server` class:
+VestesPy is very easy to use. All you need to do is create an instance of `vesespy.Server` class:
 
     import vestespy
-    
-    class MyServer(vestespy.Server):
-      def before_request(self, req):
-        print(req.url)
-        super().before_request(req)
-    
-      def stream_request(self, req, chunk):
-        super().stream_request(req, chunk)
-    
-      def after_request(self, req):
-        res = vestespy.response.Response("Hello world!")
-        res.headers["Cache-Control"] = "no-cache"
-        return res
-      
-    server = MyServer(("localhost", 8080))
+
+    def onend(req, res):
+      res.send_all("TEST")
+
+    def onrequest(server, req):
+      req.on("end", onend)
+
+    server = vestespy.Server(("localhost", 8080))
+    server.on("request", onrequest)
+
     server.serve_forever()
 
 **Documentation:**
@@ -40,44 +35,26 @@ VestesPy is very easy to use. All you need to do is create a subclass of `vesesp
   - **serve_forever(self)** Fires the server.
   - **shutdown(self)** Kills the server.
 
-In order to use the server you should implement the following methods (of which only `after_request` is mandatory):
-  - **before_request(self, req)** Fires after receiveing headers, but before body is ready.
-  - **stream_request(self, req, chunk)** Fires after receiveing chunks of data (by default they are buffered).
-  - **after_request(self, req)** Fires after both headers and body is ready. This method has to return an instance of `Response` object.
-
-Note that returning `False` in any of these methods will result in killing the connection.
+The server is also an event emitter. It responds to the following events:
+  - **request** handler is a function of the form **def onrequest(server, req)**. This event fires once the request is accepted and headers are parsed.
 
 -
 
-**class vestespy.request.Request**
-Passed to server's `before_request`, `stream_request` and `after_request`. Some of the interesting properties:
+**class vestespy.Request**
+Passed to server's `request` handler. It's an object associated to the request. It is an event emitter with the following events:
 
-  - **headers** Dict of parsed heaedrs;
-  - **method** One of the HTTP methods;
-  - **url** without query string;
-	- **query** parsed query string;
-	- **protocol** probably `HTTP/1.1` nowadays;
-  - **body** body of the request as a `bytes` instance;
+  - **data** Fires when data arrives;
+  - **end** Fires at the end of the request;
+
+Each of the events can be handled via handler of type **def onevent(req, res)**, where `res` is an instance of `vestespy.Response`.
 
 -
 
-**class vestespy.response.Response**
-  - **init(self, body, mime=None, charset=None)** The `body` should be either `str` or `bytes`.
-
--
-
-**class vestespy.response.ChunkResponse**
-  - **init(self, stream, mime=None, charset=None)** The `stream` should be any iterable.
-
-Note that `ChunkResponse` will set `Transfer-Encoding: chunked` header and will send each item in `stream` as a chunk (perfect if you don't know the length of `stream`).
-
--
-
-**class vestespy.response.StreamResponse**
-  - **init(self, stream, mime=None, charset=None, length=None)** The `stream` should be any iterable. You have to specify `length` (will be passed as a response header).
-
-This is similar to `ChunkResponse` except it requires `length` parameter (which is the length of entire data in `stream`, not number of chunks). It sets `Content-Length: length` header and does the normal streaming.
-
+**class vestespy.Response**
+A response object with the following methods:
+  - **send_all(data)** Sends `data` as a one big response. `data` has to be either `str` or `bytes`. It sets `Content-Length` header as well.
+  - **send_stream(stream, length)** Sends stream of `str` or `bytes` as a response. The total amount of data must be equalt to `length` (thus it has to be preevaluated earlier).
+  - **send_chunked(stream)** As above, except it does not require length. It sends the data as a chunked data (thus it sets `Transfer-Enocoding: chunked` header).
 
 -
 

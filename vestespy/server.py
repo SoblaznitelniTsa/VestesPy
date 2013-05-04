@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import socket
-from vestespy import selects
 import traceback
+from vestespy import selects
 from concurrent.futures import ThreadPoolExecutor
 from vestespy.request import Request
-from vestespy.response import HTTPError
+from vestespy.tools import EventManager
+from vestespy.parser import get_request_data
 
-class Server:
+class Server(EventManager):
 	def __init__(self, addr, handler=Request, select="select", max_workers=50, debug=False):
 		if not issubclass(handler, Request):
 			raise ValueError("Server instance only accepts subclasses of Request as handlers!")
@@ -22,6 +23,7 @@ class Server:
 
 		self.method = getattr(selects, select)(self)
 		self.debug = debug
+		super().__init__()
 
 	def shutdown(self):
 		try:
@@ -34,30 +36,19 @@ class Server:
 		except Exception:
 			pass
 
-	def before_request(self, req):
-		pass
-
-	def stream_request(self, req, chunk):
-		req._buffer += chunk
-
-	def _after_request(self, req):
-		req.body = req._buffer
-		try:
-			return self.after_request(req)
-		except Exception:
-			traceback.print_exc()
-			error = HTTPError(500, debug=self.debug)
-			error.send(req)
-			raise
-		finally:
-			req._buffer = b""
-			del req.body
-
 	def serve_forever(self):
 		try:
 			self.method.serve()
 		finally:
 			self.shutdown()
 
-	def _handle_raw(self, handler):
-		self._pool.submit(handler._handle_raw)
+	def handle_raw(self, conn):
+		req = self.handler_class(conn, self)
+		try:
+			get_request_data(req)
+		except Exception:
+			traceback.print_exc()
+			raise
+
+	def _handle_raw(self, conn):
+		self._pool.submit(self.handle_raw, conn)

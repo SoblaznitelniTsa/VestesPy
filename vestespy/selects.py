@@ -11,18 +11,15 @@ class select:
 		self.server = server
 		self.connections = [server._socket]
 		self.to_remove = []
-		self.handlers = {}
 
-	def remove(self, handler):
-		if not handler or not hasattr(handler, "connection"):
+	def remove(self, conn):
+		if not conn:
 			return
 		with self._lock:
 			try:
-				self.to_remove.append(handler.connection)
+				self.to_remove.append(conn)
 			except ValueError:
 				pass
-			if handler.connection in self.handlers:
-				del self.handlers[handler.connection]
 
 	def update(self, lst=None):
 		if self.to_remove:
@@ -55,21 +52,10 @@ class select:
 				for sock in read:
 					if sock == server._socket:
 						conn, addr = server._socket.accept()
-						conn.setblocking(0)
-						handler = server.handler_class(conn, addr, server)
 						with self._lock:
-							self.handlers[conn] = handler
 							self.connections.append(conn)
 					else:
-						handler = self.handlers.get(sock, None)
-						if not handler:
-							try:
-								with self._lock:
-									self.to_remove.append(sock)
-							except ValueError:
-								pass
-						else:
-							server._handle_raw(handler)
+						server._handle_raw(sock)
 
 class epoll:
 	def __init__(self, server):
@@ -79,8 +65,8 @@ class epoll:
 		self.connections = {}
 		self.to_remove = []
 
-	def remove(self, handler):
-		fileno = handler.connection.fileno()
+	def remove(self, conn):
+		fileno = conn.fileno()
 		try:
 			self.epoll.unregister(fileno)
 		except Exception:
@@ -100,24 +86,22 @@ class epoll:
 					if fileno == socket.fileno():
 						try:
 							conn, addr = socket.accept()
-							conn.setblocking(0)
 							self.epoll.register(conn.fileno(), S.EPOLLIN | S.EPOLLET)
-							handler = server.handler_class(conn, addr, server)
 							with self._lock:
-								self.connections[conn.fileno()] = handler
+								self.connections[conn.fileno()] = conn
 						except S.error:
 							pass
 					elif event & S.EPOLLIN:
-						handler = self.connections.get(fileno, None)
-						if handler:
+						conn = self.connections.get(fileno, None)
+						if conn:
 							try:
-								server._handle_raw(handler)
+								server._handle_raw(conn)
 							except S.error:
 								pass
 					elif event & S.EPOLLHUP:
-						handler = self.connections.get(fileno, None)
-						if handler:
-							self.remove(handler)
+						conn = self.connections.get(fileno, None)
+						if conn:
+							self.remove(conn)
 		finally:
 			self.epoll.unregister(socket.fileno())
 			self.epoll.close()
