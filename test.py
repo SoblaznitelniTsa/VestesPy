@@ -6,14 +6,32 @@ server = vestespy.Server(("localhost", 8080), debug=True)
 
 dispatcher = vestespy.tools.Dispatcher()
 
-def test(server, req, res):
-	res.send_all("test")
+HTML = b"""<!DOCTYPE html>
+<html><head></head>
+<body>
+<form method="POST" enctype="multipart/form-data" action="/upload">
+	<input type="file" name="data" multiple="multiple"><br/>
+	<input type="submit" value="Submit"/>
+</form>
+</body></html>"""
 
-def test2(server, req, res, id=None):
-	res.send_all("ID: %s" % id)
+def home(server, req, res):
+	res.headers["Content-Type"] = "text/html; charset=utf-8"
+	res.send_all(HTML, buffer=False)
 
-dispatcher.register("/", test)
-dispatcher.register("/test/:id", test2)
+def ondata(req, res, chunk):
+	print(chunk)
+
+def onend(req, res):
+	res.send_all("OK", buffer=False)
+
+def upload(server, req, res):
+	server.console.info(req.headers)
+	req.on("data", ondata)
+	req.on("end", onend)
+
+dispatcher.register("/", home)
+dispatcher.register("/upload", upload)
 
 server.on("request", dispatcher.as_handler())
 

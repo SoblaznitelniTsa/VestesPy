@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import socket
-from vestespy.tools import EventManager, Headers
+from vestespy.tools import EventManager
 
 class Request(EventManager):
 
@@ -9,7 +9,17 @@ class Request(EventManager):
 		self.server = server
 		super().__init__()
 
-	def shutdown(self):
+	def _clean_attr(self, attr):
+		if hasattr(self, attr):
+			delattr(self, attr)
+
+	def _clean(self):
+		self._clean_attr("server")
+		self._clean_attr("connection")
+		self._clean_attr("_events")
+		self._clean_attr("excepttion_handler")
+
+	def _shutdown(self):
 		self.server.method.remove(self.connection)
 		try:
 			self.connection.shutdown(socket.SHUT_RDWR)
@@ -17,4 +27,4 @@ class Request(EventManager):
 		except Exception:
 			pass
 		finally:
-			del self.server, self.connection
+			self._clean()

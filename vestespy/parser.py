@@ -33,6 +33,11 @@ def finalize(req, res):
 		req.trigger("end", [res])
 	except HTTPError as e:
 		res.send_error(e.code, e.msg)
+	except Exception:
+		req.server.exception_handler()
+		res.send_error(500)
+		raise
+
 
 def get_request_data(req):
 	res = Response(req.connection, req.server, request=req)
@@ -52,7 +57,7 @@ def get_request_data(req):
 				break
 
 			if not data:
-				req.shutdown()
+				req._shutdown()
 				return
 
 			if not hasattr(req, "headers"):
@@ -61,7 +66,7 @@ def get_request_data(req):
 				if sep != HTTP_HEADER_END:
 					# headers are not inside initial data, kill it
 					res.send_error(400)
-					req.shutdown()
+					req._shutdown()
 					return
 
 				try:
@@ -69,7 +74,7 @@ def get_request_data(req):
 				except Exception:
 					req.server.exception_handler()
 					res.send_error(400)
-					req.shutdown()
+					req._shutdown()
 					return
 
 				try:
@@ -82,6 +87,10 @@ def get_request_data(req):
 				except HTTPError as e:
 					res.send_error(e.status, e.msg)
 					break
+				except Exception:
+					req.server.exception_handler()
+					res.send_error(500)
+					raise
 
 				res.protocol = req.protocol
 
@@ -98,12 +107,17 @@ def get_request_data(req):
 			except HTTPError as e:
 				res.send_error(e.status, e.msg)
 				break
+			except Exception:
+				req.server.exception_handler()
+				res.send_error(500)
+				raise
 
 			if total == req.content_length:
 				finalize(req, res)
 				break
 
 		if hasattr(req, "headers") and req.headers.get("connection", "") != "keep-alive":
-			req.shutdown()
+			req._shutdown()
 	finally:
+		req._clean()
 		del res.request, res.connection, res.server, res

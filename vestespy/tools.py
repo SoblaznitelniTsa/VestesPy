@@ -87,7 +87,8 @@ def default_exception_handler():
 class EventManager:
 	def __init__(self, *args, **kwargs):
 		self._events = {}
-		self.exception_handler = default_exception_handler
+		if not hasattr(self, "exception_handler"):
+			self.set_exception_handler(default_exception_handler)
 
 	def set_exception_handler(self, handler):
 		self.exception_handler = handler

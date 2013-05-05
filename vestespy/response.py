@@ -4,6 +4,7 @@ from vestespy.tools import Headers, CRLF
 
 class Response:
 	def __init__(self, conn, server, request=None):
+		self._buffer = b""
 		self.request = request
 		self.alive = True
 		self.connection = conn
@@ -35,23 +36,30 @@ class Response:
 			self._cached_headers = response
 		return self._cached_headers
 
-	def send_all(self, data=None):
+	def send_all(self, data=None, buffer=True):
 		self.check_self()
 		if data is not None:
 			if isinstance(data, str):
 				data = data.encode(self.charset)
 			if not isinstance(data, bytes):
-				raise TypeError("res.send_all accepts only str or bytes!")
-			self.headers["Content-Length"] = len(data)
+				raise TypeError("res.send_all accepts only None, str or bytes!")
 		else:
-			self.headers["Content-Length"] = 0
+			data = b""
 
-		response = self.combine_headers()
-		if data is not None:
-			response += data
+		if not buffer:
+			if data is not None:
+				self.headers["Content-Length"] = len(data)
+			else:
+				self.headers["Content-Length"] = 0
 
-		self.send(response)
-		self.alive = False
+			response = self.combine_headers()
+			if data is not None:
+				response += data
+
+			self.send(response)
+			self.alive = False
+		else:
+			self._buffer = data
 
 	def send_stream(self, iterable, total):
 		self.check_self()
@@ -118,6 +126,6 @@ class Response:
 
 	def send(self, data):
 		try:
-			self.connection.sendall(data)
+			self.connection.send(data)
 		except Exception:
 			pass

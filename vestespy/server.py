@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 import socket
 import traceback
+import time
+import sys
 from vestespy import selects
 from concurrent.futures import ThreadPoolExecutor
 from vestespy.request import Request
 from vestespy.tools import EventManager, dummy
 from vestespy.parser import get_request_data
+from vestespy.logger import Console
+
+SOCKET_TRIES = 10
 
 class Server(EventManager):
 	def __init__(self, addr, handler=Request, 
@@ -13,13 +18,30 @@ class Server(EventManager):
 			HEADERS_LENGTH=8192, CHUNK_LENGTH=16384):
 		if not issubclass(handler, Request):
 			raise ValueError("Server instance only accepts subclasses of Request as handlers!")
+		self.console = Console()
 		self._pool = ThreadPoolExecutor(max_workers=max_workers)
 		self.handler_class = handler
 		
 		if isinstance(addr, tuple):
 			self.address = addr
 			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self._socket.bind(addr)
+			counter = 0
+			if debug:
+				self.console.info("Initializing VestesPy server", end="")
+			while True:
+				try:
+					if debug:
+						self.console.log(".", end="")
+					self._socket.bind(addr)
+				except Exception:
+					counter += 1
+					if counter >= SOCKET_TRIES:
+						raise
+					time.sleep(1)
+				else:
+					if debug:
+						self.console.log(" Done!")
+					break
 			self._socket.setblocking(0)
 			self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 			self._socket.listen(50)
@@ -34,8 +56,12 @@ class Server(EventManager):
 
 		self.method = getattr(selects, select)(self)
 		self.debug = debug
-		if not self.debug:
+		if not debug:
 			self.set_exception_handler(dummy)
+		else:
+			def exc():
+				self.console.error("\n"+traceback.format_exc())
+			self.set_exception_handler(exc)
 		super().__init__()
 
 	def shutdown(self):
@@ -52,6 +78,8 @@ class Server(EventManager):
 	def serve_forever(self):
 		try:
 			self.method.serve()
+		except KeyboardInterrupt:
+			self.console.warn("Shutting down the server.")
 		finally:
 			self.shutdown()
 
