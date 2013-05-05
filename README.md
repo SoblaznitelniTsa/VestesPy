@@ -68,11 +68,11 @@ Creates a route dispatcher. The usage is very simple:
 
     def home(server, req, res):
       res.send_all("test")
-    dispatcher.register("/", test)
+    dispatcher.register("/", home)
 
     def test(server, req, res, id=None):
       res.send_all("ID: %s" % id)
-    dispatcher.register("/test/:id", test2)
+    dispatcher.register("/test/:id", test)
 
     server.on("request", dispatcher.as_handler())
 
