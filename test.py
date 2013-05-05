@@ -2,17 +2,19 @@
 import vestespy
 import time
 
-def ondata(req, res, data):
-	pass
-
-def onend(req, res):
-	res.send_all("OK")
-
-def onrequest(server, req, res):
-	req.on("end", onend)
-	req.on("data", ondata)
-
 server = vestespy.Server(("localhost", 8080), debug=True)
-server.on("request", onrequest)
+
+dispatcher = vestespy.tools.Dispatcher()
+
+def test(server, req, res):
+	res.send_all("test")
+
+def test2(server, req, res, id=None):
+	res.send_all("ID: %s" % id)
+
+dispatcher.register("/", test)
+dispatcher.register("/test/:id", test2)
+
+server.on("request", dispatcher.as_handler())
 
 server.serve_forever()

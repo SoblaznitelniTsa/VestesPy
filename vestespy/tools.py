@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import traceback
 from vestespy import validators
+from vestespy.dispatcher import Dispatcher
 
 CRLF = b"\r\n"
 HTTP_HEADER_END = b"\r\n\r\n"

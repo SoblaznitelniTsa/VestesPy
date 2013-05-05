@@ -56,6 +56,30 @@ A response object with the following methods:
 
 -
 
+**class vestespy.tools.Dispatcher**
+
+Creates a route dispatcher. The usage is very simple:
+
+    import vestespy
+
+    server = vestespy.Server(("localhost", 8080), debug=True)
+
+    dispatcher = vestespy.tools.Dispatcher()
+
+    def home(server, req, res):
+      res.send_all("test")
+    dispatcher.register("/", test)
+
+    def test(server, req, res, id=None):
+      res.send_all("ID: %s" % id)
+    dispatcher.register("/test/:id", test2)
+
+    server.on("request", dispatcher.as_handler())
+
+    server.serve_forever()
+
+You may pass a regular expression to `register` as well.
+
 **LICENSE**
 
 <rafael.szefler@gmail.com> wrote this code. As long as you retain this notice you can do whatever you want with this stuff. If we meet some day, and you think this stuff is worth it, you can buy me a beer in return.
