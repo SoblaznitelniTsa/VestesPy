@@ -15,18 +15,17 @@ HTML = b"""<!DOCTYPE html>
 </form>
 </body></html>"""
 
-def home(server, req, res):
+def home(ev, req, res):
 	res.headers["Content-Type"] = "text/html; charset=utf-8"
 	res.send_all(HTML, buffer=False)
 
-def ondata(req, res, chunk):
+def ondata(ev, req, res, chunk):
 	print(chunk)
 
-def onend(req, res):
+def onend(ev, req, res):
 	res.send_all("OK", buffer=False)
 
-def upload(server, req, res):
-	server.console.info(req.headers)
+def upload(ev, req, res):
 	req.on("data", ondata)
 	req.on("end", onend)
 

@@ -84,6 +84,36 @@ class Headers:
 def default_exception_handler():
 	traceback.print_exc()
 
+class Event:
+	def __init__(self, source, name):
+		self.source = source
+		self.name = name
+		self._continue = True
+
+	def stopPropagation(self):
+		self._continue = False
+
+	def continuePropagation(self):
+		self._continue = True
+
+	def set(self, key, value):
+		if not hasattr(self, "_data"):
+			self._data = {}
+		self._data[key] = value
+
+	def get(self, key, **kwargs):
+		if not hasattr(self, "_data"):
+			if "default" in kwargs:
+				return kwargs["default"]
+			raise KeyError()
+
+		try:
+			return self._data[key]
+		except KeyError:
+			if "default" in kwargs:
+				return kwargs["default"]
+			raise
+
 class EventManager:
 	def __init__(self, *args, **kwargs):
 		self._events = {}
@@ -119,8 +149,13 @@ class EventManager:
 		if name not in self._events:
 			return
 
+		ev = Event(self, name)
+
 		for handler in self._events[name]:
 			try:
-				handler(self, *args)
+				handler(ev, *args)
 			except Exception:
 				self.exception_handler()
+
+			if not ev._continue:
+				break
