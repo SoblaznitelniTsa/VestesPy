@@ -15,11 +15,10 @@ VestesPy is very easy to use. All you need to do is create an instance of `veses
 
     import vestespy
 
+    def onend(ev, req, res):
+      res.send_all("TEST")
+
     def onrequest(ev, req, res):
-
-      def onend(ev):
-        res.send_all("TEST")
-
       req.on("end", onend)
 
     server = vestespy.Server(("localhost", 8080))
@@ -44,8 +43,8 @@ The server is also an event emitter. It responds to the following events:
 **class vestespy.Request**
 Passed to server's `request` handler. It's an object associated to the request. It is an event emitter with the following events:
 
-  - **data** Fires when data arrives; Note that a developer has to take care of combining/parsing chunked body; At the moment the request has to have `Content-Length` header, otherwise VestesPy will treat it as a request without body; The handler for this event is of type **def ondata(ev)**, thus you have to create handler inside `request` handler in order to use `req` and `res` objects;
-  - **end** Fires at the end of the request; The handler for this event is of type **def onend(ev)**;
+  - **data** Fires when data arrives; Note that a developer has to take care of combining/parsing chunked body; At the moment the request has to have `Content-Length` header, otherwise VestesPy will treat it as a request without body; The handler for this event is of type **def ondata(ev, req, res, chunk)**.
+  - **end** Fires at the end of the request; The handler for this event is of type **def onend(ev, req, res)**;
 
 -
 
