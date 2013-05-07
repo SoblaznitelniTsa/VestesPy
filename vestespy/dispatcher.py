@@ -6,6 +6,7 @@ def handle404(server, req, res):
 	res.send_error(404, HTML404)
 
 REGEXP = re.compile(r":(\w+)")
+GROUP_REGEXP = re.compile(r"P<(.*)>")
 
 class Dispatcher:
 
@@ -19,6 +20,9 @@ class Dispatcher:
 		groups = REGEXP.findall(pattern)
 		for group in groups:
 			pattern = re.sub(r":\w+", "(?P<"+group+">[0-9A-Za-z]*?)", pattern, count=1)
+
+		groups = GROUP_REGEXP.findall(pattern)
+
 		pattern += "$"
 
 		pattern = re.compile(pattern)

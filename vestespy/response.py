@@ -122,7 +122,7 @@ class Response:
 		for key, value in headers:
 			self.headers[key] = value
 
-		self.send_all(body)
+		self.send_all(body, buffer=False)
 
 	def send(self, data):
 		try:

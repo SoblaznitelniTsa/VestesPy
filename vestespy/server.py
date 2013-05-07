@@ -26,12 +26,10 @@ class Server(EventManager):
 			self.address = addr
 			self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			counter = 0
-			if debug:
-				self.console.info("Initializing VestesPy server", end="")
+			self.console.info("Initializing VestesPy server", end="")
 			while True:
 				try:
-					if debug:
-						self.console.log(".", end="")
+					self.console.log(".", end="")
 					self._socket.bind(addr)
 				except Exception:
 					counter += 1
@@ -39,8 +37,7 @@ class Server(EventManager):
 						raise
 					time.sleep(1)
 				else:
-					if debug:
-						self.console.log(" Done!")
+					self.console.log(" Done!")
 					break
 			self._socket.setblocking(0)
 			self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

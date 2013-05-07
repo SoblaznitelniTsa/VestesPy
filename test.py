@@ -19,13 +19,13 @@ def home(ev, req, res):
 	res.headers["Content-Type"] = "text/html; charset=utf-8"
 	res.send_all(HTML, buffer=False)
 
-def ondata(ev, req, res, chunk):
-	print(chunk)
-
-def onend(ev, req, res):
-	res.send_all("OK", buffer=False)
-
 def upload(ev, req, res):
+	def ondata(ev, chunk):
+		print(chunk)
+
+	def onend(ev):
+		res.send_all("OK", buffer=False)
+	
 	req.on("data", ondata)
 	req.on("end", onend)
 

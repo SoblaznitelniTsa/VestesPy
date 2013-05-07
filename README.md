@@ -15,10 +15,11 @@ VestesPy is very easy to use. All you need to do is create an instance of `veses
 
     import vestespy
 
-    def onend(req, res):
-      res.send_all("TEST")
+    def onrequest(ev, req, res):
 
-    def onrequest(server, req, res):
+      def onend(ev):
+        res.send_all("TEST")
+
       req.on("end", onend)
 
     server = vestespy.Server(("localhost", 8080))
@@ -43,15 +44,15 @@ The server is also an event emitter. It responds to the following events:
 **class vestespy.Request**
 Passed to server's `request` handler. It's an object associated to the request. It is an event emitter with the following events:
 
-  - **data** Fires when data arrives; Note that a developer has to take care of combining/parsing chunked body; At the moment the request has to have `Content-Length` header, otherwise VestesPy will treat it as a request without body; The handler for this event is of type **def ondata(req, res, chunk)**;
-  - **end** Fires at the end of the request; The handler for this event is of type **def onend(req, res)**;
+  - **data** Fires when data arrives; Note that a developer has to take care of combining/parsing chunked body; At the moment the request has to have `Content-Length` header, otherwise VestesPy will treat it as a request without body; The handler for this event is of type **def ondata(ev)**, thus you have to create handler inside `request` handler in order to use `req` and `res` objects;
+  - **end** Fires at the end of the request; The handler for this event is of type **def onend(ev)**;
 
 -
 
 **class vestespy.Response**
 A response object with the following methods:
   - **send_all(data)** Sends `data` as a one big response. `data` has to be either `str` or `bytes`. It sets `Content-Length` header as well.
-  - **send_stream(stream, length)** Sends stream of `str` or `bytes` as a response. The total amount of data must be equalt to `length` (thus it has to be preevaluated earlier).
+  - **send_stream(stream, length)** Sends stream of `str` or `bytes` as a response. The total amount of data must be equal to `length` (thus it has to be preevaluated earlier).
   - **send_chunked(stream)** As above, except it does not require length. It sends the data as a chunked data (thus it sets `Transfer-Enocoding: chunked` header).
 
 -
@@ -66,11 +67,11 @@ Creates a route dispatcher. The usage is very simple:
 
     dispatcher = vestespy.tools.Dispatcher()
 
-    def home(server, req, res):
+    def home(ev, req, res):
       res.send_all("test")
     dispatcher.register("/", home)
 
-    def test(server, req, res, id=None):
+    def test(ev, req, res, id=None):
       res.send_all("ID: %s" % id)
     dispatcher.register("/test/:id", test)
 

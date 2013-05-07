@@ -30,7 +30,7 @@ def parse_headers(raw):
 
 def finalize(req, res):
 	try:
-		req.trigger("end", [req, res])
+		req.trigger("end")
 	except HTTPError as e:
 		res.send_error(e.code, e.msg)
 	except Exception:
@@ -103,7 +103,7 @@ def get_request_data(req):
 
 			total += data_length
 			try:
-				req.trigger("data", [req, res, data])
+				req.trigger("data", [data])
 			except HTTPError as e:
 				res.send_error(e.status, e.msg)
 				break
